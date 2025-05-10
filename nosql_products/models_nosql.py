@@ -1,6 +1,8 @@
 #nosql models for nosql_products, categories
 
-from mongoengine import Document, StringField, FloatField, IntField, ReferenceField, ListField, BooleanField
+from mongoengine import Document, StringField, FloatField, IntField, ReferenceField, ListField, BooleanField, DictField, DateTimeField
+from datetime import datetime, timezone
+
 
 class Category(Document):
     name = StringField(required=True, unique=True)
@@ -17,5 +19,16 @@ class Product(Document):
     images = ListField(StringField())
     tags = ListField(StringField())
     available = BooleanField(default=True)
+    specifications = DictField()
+    created_at = DateTimeField(default=datetime.now(timezone.utc))
 
-    meta = {'collection':'products'}
+    meta = {
+        'collection': 'products',
+        'indexes': [
+            'name',
+            'price',
+            'tags',
+            'available',
+            'category',
+        ]
+    }

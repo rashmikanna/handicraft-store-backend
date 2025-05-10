@@ -1,5 +1,3 @@
-#views for nosql_products, categories
-
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -8,8 +6,14 @@ from .models_nosql import Category, Product
 from .serializers import CategorySerializer, ProductSerializer
 from rest_framework.exceptions import ValidationError
 from bson import ObjectId
+from django.http import JsonResponse
+from cloudinary.uploader import upload
+from django.views.decorators.csrf import csrf_exempt
+import cloudinary
+from rest_framework.views import APIView
 
-#category viewset
+
+# Category viewset
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -36,7 +40,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
             return Response({"error": "Category not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
-#product viewset
+# Product viewset
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
@@ -94,9 +98,8 @@ class ProductViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         return Response({"message": "Provide 'available' as true or false."}, status=status.HTTP_400_BAD_REQUEST)
 
-
     def retrieve(self, request, pk=None):
-    # Validate ObjectId
+        # Validate ObjectId
         if not ObjectId.is_valid(pk):
             return Response({"error": "Invalid product ID format"}, status=status.HTTP_400_BAD_REQUEST)
     
@@ -106,3 +109,33 @@ class ProductViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         except Product.DoesNotExist:
             return Response({"error": "Product not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+# Image upload view
+@csrf_exempt
+def upload_image(request):
+    if request.method == 'POST':
+        # Get the uploaded image from the request
+        image = request.FILES.get('image')
+
+        if image:
+            try:
+                # Upload the image to Cloudinary
+                response = upload(image)
+
+                # Get the URL of the uploaded image
+                image_url = response.get('secure_url')  # Cloudinary URL
+
+                return JsonResponse({"image_url": image_url}, status=200)
+            except Exception as e:
+                return JsonResponse({"error": f"Cloudinary upload failed: {str(e)}"}, status=500)
+        else:
+            return JsonResponse({"error": "No image provided"}, status=400)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+class ProductListView(APIView):
+    def get(self, request):
+        products = Product.objects.all()
+        serializer = ProductSerializer(products, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

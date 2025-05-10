@@ -13,9 +13,17 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from ast import Try
 from pathlib import Path
 from mongoengine import connect
+import os
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+from dotenv import load_dotenv
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / '.env')
+BASE_DIR = Path(__file__).resolve().parent.parent
+print("MONGODB_URI is:", os.getenv("MONGODB_URI"))
+
 
 
 # Quick-start development settings - unsuitable for production
@@ -94,18 +102,16 @@ DATABASES = {
     }
 }
 
-#MongoDB Configuration
 MONGO_DB_NAME = "telangana_handicrafts_db"
-MONGO_URI = "mongodb://localhost:27017/telangana_handicrafts_db"
-#connect MongoEngine to MongoDB
-try:
-    connect(
-        db=MONGO_DB_NAME,
-        host=MONGO_URI,
-        alias='default'
-    )
-except Exception as e:
-    print(f"MongoDB connection failed: {e}")
+MONGO_URI     = os.getenv("MONGODB_URI")
+
+# Connect to MongoDB Atlas
+connect(
+    db="telangana_handicrafts_db",
+    host=os.getenv("MONGODB_URI"),
+    alias='default'
+)
+print("MongoEngine default connection established")
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -143,7 +149,24 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+STATICFILES_DIRS = [
+    r'R:\Projects\handicrafts\handicrafts-store-frontend\build\static',
+]
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+SECRET_KEY = 'django-insecure-2^d1qla9$*5v+jf7rjc_2+a+u3b^%j6)_rv0rk4+a5$v^2l@ci'
+
+cloudinary.config(
+    cloud_name='dus8mpxbe',
+    api_key='468745917586793',
+    api_secret='tgYurWsEfDdYVzeQ3MCjlYhi7so'
+)

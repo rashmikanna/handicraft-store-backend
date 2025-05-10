@@ -27,11 +27,10 @@ class ProductSerializer(serializers.Serializer):
     images = serializers.ListField(child=serializers.URLField(),required=False,allow_null=True)
     tags = serializers.ListField(child=serializers.CharField(),required=False,allow_null=True)
     available = serializers.BooleanField()
+    specifications = serializers.DictField(child=serializers.CharField(), required=False)
+    created_at = serializers.DateTimeField(read_only=True)
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
-        if instance.category:
-            rep['category'] = str(instance.category.id)  # Serialize category as its ID
-        else:
-            rep['category'] = None
+        rep['category'] = str(instance.category.id) if instance.category else None
         return rep
